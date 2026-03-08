@@ -1,0 +1,246 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Krubs</title>
+    <style>
+        :root {
+            --gap: 12px;
+            --card-bg: #fff;
+            --max-width: 1100px
+        }
+
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 28px;
+            background: #f7f7f7;
+            color: #111
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            text-align: center
+        }
+
+        .gallery-wrap {
+            max-width: var(--max-width);
+            margin: 0 auto
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: var(--gap);
+            align-items: start;
+        }
+
+  figure {
+        margin: 0;
+        background: var(--card-bg);
+        padding: 6px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+        overflow: hidden;
+        height: var(--thumb-h);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    a.thumb {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        width: 100%;
+        height: 100%;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            border-radius: 4px
+        }
+
+        figcaption {
+            font-size: 12px;
+            padding: 6px 4px;
+            color: #444;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .note {
+            text-align: center;
+            color: #666;
+            margin-top: 14px
+        }
+
+        /* simple responsive lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .75);
+            z-index: 999
+        }
+
+        .lightbox img {
+            max-width: 95%;
+            max-height: 95%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .6)
+        }
+
+        .lightbox.show {
+            display: flex
+        }
+
+        @media (max-width:420px) {
+            figcaption {
+                font-size: 11px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Krubs</h1>
+    <div class="gallery-wrap">
+        <div id="gallery" class="gallery" aria-live="polite"></div>
+        <p id="note" class="note">Loading…</p>
+    </div>
+    <div id="lightbox" class="lightbox" role="dialog" aria-hidden="true"></div>
+
+    <script>
+        const root_dir = 'assets/krubs/';
+        const images = ['117978209589838.jpg', '117978409589818.jpg', '117978602923132.jpg', '117978739589785.jpg', '117978989589760.jpg', '117979246256401.jpg', '117980089589650.jpg', '117980262922966.jpg', '117980416256284.jpg', '117980682922924.jpg', '117980692922923.jpg', '119738189413840.jpg', '119947236059602.jpg', '120071469380512.jpg', '122471759140483.jpg', '122472225807103.jpg', '122922512428741.jpg', '122922655762060.jpg', '122940392426953.jpg', '123038742417118.jpg', '123313629056296.jpg', '123632775691048.jpg', '123770992343893.jpg', '124022648985394.jpg', '124441308943528.jpg', '125555618832097.jpg', '125555762165416.jpg', '125556002165392.jpg', '125556132165379.jpg', '125556252165367.jpg', '125556318832027.jpg', '125556545498671.jpg', '125636932157299.jpg', '125639672157025.jpg', '125646692156323.jpg', '127019702019022.jpg', '127019802019012.jpg', '127019895352336.jpg', '127133412007651.jpg', '127151042005888.jpg', '127151048672554.jpg', '127151075339218.jpg', '127151082005884.jpg', '127151112005881.jpg', '128052498582409.jpg', '130216695032656.jpg', '130812231639769.jpg', '131316414922684.jpg', '131317341589258.jpg', '131430288244630.jpg', '132044371516555.jpg', '132613444792981.jpg', '132732104781115.jpg', '132732224781103.jpg', '132732701447722.jpg', '132732801447712.jpg', '133255224728803.jpg', '134280187959640.jpg', '134296957957963.jpg', '135347174519608.jpg', '135358471185145.jpg', '135843394469986.jpg', '135950051125987.jpg', '136877917699867.jpg', '136878097699849.jpg', '137558770965115.jpg', '137953380925654.jpg', '138643807523278.jpg', '145824170138575.jpg', '145829933471332.jpg', '145830056804653.jpg', '145830663471259.jpg', '145844746803184.jpg', '145845713469754.jpg', '145849590136033.jpg', '145849670136025.jpg', '145850073469318.jpg', '145854293468896.jpg', '145854390135553.jpg', '145859846801674.jpg', '145861840134808.jpg', '145863970134595.jpg', '145865126801146.jpg', '145867893467536.jpg', '148809883173337.jpg', '148831183171207.jpg', '149948023059523.jpg', '159623938758598.jpg', '159624045425254.jpg', '159624105425248.jpg', '355834385804218.jpg', '355834849137505.jpg', '355858882468435.jpg', '355873215800335.jpg', '356405545747102.jpg', '356582345729422.jpg', '357375822316741.jpg', '357377198983270.jpg', '357959195591737.jpg', '752239182830401.jpg'];
+
+        const gallery = document.getElementById('gallery');
+        const note = document.getElementById('note');
+        const lightbox = document.getElementById('lightbox');
+        let currentIndex = -1;
+
+        if (!images || images.length === 0) {
+            note.textContent = 'No images found.';
+        } else {
+            note.remove();
+            images.forEach((name, idx) => {
+                const src = root_dir + name;
+                const fig = document.createElement('figure');
+
+                const link = document.createElement('a');
+                link.className = 'thumb';
+                link.href = src;
+                link.title = name;
+                link.addEventListener('click', e => {
+                    e.preventDefault();
+                    openLightboxByIndex(idx);
+                });
+
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = name;
+                img.loading = 'lazy';
+                link.appendChild(img);
+
+                const cap = document.createElement('figcaption');
+                cap.textContent = name;
+
+                fig.appendChild(link);
+                fig.appendChild(cap);
+                gallery.appendChild(fig);
+            });
+        }
+
+        function openLightboxByIndex(idx) {
+            currentIndex = (idx + images.length) % images.length;
+            renderLightbox();
+        }
+
+        function renderLightbox() {
+            lightbox.innerHTML = '';
+            lightbox.classList.add('show');
+            lightbox.setAttribute('aria-hidden', 'false');
+
+            // Prev button
+            const prev = document.createElement('button');
+            prev.className = 'lb-btn lb-prev';
+            prev.innerHTML = '◀';
+            prev.title = 'Previous';
+            Object.assign(prev.style, { position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', zIndex: 1000, fontSize: '28px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' });
+            prev.addEventListener('click', e => { e.stopPropagation(); showImageAt(currentIndex - 1); });
+            lightbox.appendChild(prev);
+
+            // Next button
+            const next = document.createElement('button');
+            next.className = 'lb-btn lb-next';
+            next.innerHTML = '▶';
+            next.title = 'Next';
+            Object.assign(next.style, { position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', zIndex: 1000, fontSize: '28px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' });
+            next.addEventListener('click', e => { e.stopPropagation(); showImageAt(currentIndex + 1); });
+            lightbox.appendChild(next);
+
+            // Image
+            const img = document.createElement('img');
+            img.src = root_dir + images[currentIndex];
+            img.alt = images[currentIndex];
+            Object.assign(img.style, { maxWidth: '95%', maxHeight: '95%', boxShadow: '0 8px 30px rgba(0,0,0,.6)' });
+            lightbox.appendChild(img);
+        }
+
+        // show image at index (wraps)
+        function showImageAt(idx) {
+            currentIndex = (idx + images.length) % images.length;
+            const img = lightbox.querySelector('img');
+            if (img) {
+                img.src = root_dir + images[currentIndex];
+                img.alt = images[currentIndex];
+            } else {
+                renderLightbox();
+            }
+        }
+
+        // click anywhere on lightbox (except buttons) -> next
+        lightbox.addEventListener('click', (e) => {
+            // if click target is a button, ignore (buttons have stopPropagation)
+            if (e.target.closest('.lb-btn')) return;
+            showImageAt(currentIndex + 1);
+        });
+
+        // close on Esc
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && lightbox.classList.contains('show')) {
+                lightbox.classList.remove('show');
+                lightbox.setAttribute('aria-hidden', 'true');
+                lightbox.innerHTML = '';
+                currentIndex = -1;
+                return;
+            }
+            // left / right arrows
+            if (lightbox.classList.contains('show')) {
+                if (e.key === 'ArrowRight') showImageAt(currentIndex + 1);
+                if (e.key === 'ArrowLeft') showImageAt(currentIndex - 1);
+            }
+        });
+
+        // also allow clicking background (outside image) to close if user ctrl+click background
+        // double-click background to close quickly
+        lightbox.addEventListener('dblclick', (e) => {
+            if (!e.target.closest('img')) {
+                lightbox.classList.remove('show');
+                lightbox.setAttribute('aria-hidden', 'true');
+                lightbox.innerHTML = '';
+                currentIndex = -1;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

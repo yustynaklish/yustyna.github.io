@@ -1,14 +1,57 @@
 <div style="text-align:center">
 
-<a href="https://picasion.com/gl/luCB/"><img src="https://i.picasion.com/gl/93/luCB.gif" width="742" height="30" border="0" alt="glitter maker" /></a><br /><a href="https://picasion.com/gl/luCB/"></a>
+    <a href="https://picasion.com/gl/luCB/"><img src="https://i.picasion.com/gl/93/luCB.gif" width="742" height="30"
+            border="0" alt="glitter maker" /></a><br /><a href="https://picasion.com/gl/luCB/"></a>
 
-<p>
-Rarely do you get a chance to own a domain which is just your first name dot com. I do. This is my story.
-</p>
+    <p>
+        Rarely do you get a chance to own a domain which is just your first name dot com. I do. This is my story.
+    </p>
 
-<img src="assets/gif-club-penguin-dance.gif" alt="Club Penguin Dance" />
+    <p><a href="krubs.html">🚬🥸</a></p>
 
-<script>document.write('<marquee>' + (['ieisevil.gif','macmade-wht.gif','nedscape_now.gif', 'sucks.gif'].map(n=>'<img src="assets/'+n+'" height="30" style="margin:0 8px">').join('')) + '</marquee>')</script>
+    <img src="assets/gif-club-penguin-dance.gif" alt="Club Penguin Dance" />
+
+    <style>
+        .marquee-scroll {
+            display: block;
+            margin: 10px auto;
+            max-width: 742px;
+            overflow: visible !important;
+            height: auto;
+            padding: 30px 0;
+            line-height:1;
+            white-space:nowrap;
+        }
+
+        .marquee-scroll img {
+            vertical-align: middle;
+            max-height: none;
+        }
+
+        .rotate {
+            animation: spin 2s linear infinite;
+            transform-origin: 50% 50%;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        document.write('<marquee class="marquee-scroll">' +
+            (['ieisevil.gif', 'macmade-wht.gif', 'nedscape_now.gif', 'sucks.gif', 'tomscott.jpg', 'shintaro.png']
+                .map(n => '<img src="assets/' + n + '" style="margin:0 8px"' + (n === 'shintaro.png' ? ' class="rotate"' : '') + '>')
+                .join('')
+            ) +
+            '</marquee>')
+    </script>
 
 
 </div>
